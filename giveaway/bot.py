@@ -1,5 +1,6 @@
 from .access_policy import restricted, giveaway_runtime
 from .notifications import notification_payload
+from .clear_messages import register_clear
 import asyncio
 from decimal import Decimal
 import logging
@@ -488,6 +489,7 @@ register_message_log(bot)
 register_auto_translate(bot)
 register_word_filter(bot)
 register_community(bot)
+register_clear(bot)
 bot.tree.add_command(group)
 
 if __name__ == '__main__':
