@@ -33,7 +33,7 @@ class StoreTests(unittest.TestCase):
     def test_template_rejects_attribute_access_conversion_and_formats(self):
         for value in ('{user.__class__}','{user!r}','{user:>1000000}','{bad}','{', ''):
             with self.assertRaises(ReceiptError):validate_template(value)
-        self.assertEqual(render_template('{server}: {reason} {{}}',dict(server='Salt',reason='test')),'Salt: test {}')
+        self.assertEqual(render_template('{server}: {reason} {{}}',dict(server='Community',reason='test')),'Community: test {}')
     def test_log_destination_snapshot(self):
         self.db.configure(1,log=20)
         c,_=self.db.create(1,7,9,'warn','r',1)
@@ -59,7 +59,7 @@ class ServiceFixtures:
         self.actor=member(9,5);self.target=member(7);self.me=member(8,10)
         self.channel=Mock(spec=discord.TextChannel);self.channel.id=40;self.channel.guild=NS(id=1);self.channel.send=AsyncMock(return_value=NS(id=99))
         async def fetch(uid):return {9:self.actor,7:self.target,8:self.me}[uid]
-        self.guild=NS(id=1,name='Salt',owner_id=100,fetch_member=AsyncMock(side_effect=fetch),ban=AsyncMock(),unban=AsyncMock(),fetch_ban=AsyncMock(),fetch_channel=AsyncMock(return_value=self.channel))
+        self.guild=NS(id=1,name='Community',owner_id=100,fetch_member=AsyncMock(side_effect=fetch),ban=AsyncMock(),unban=AsyncMock(),fetch_ban=AsyncMock(),fetch_channel=AsyncMock(return_value=self.channel))
         self.bot=NS(user=self.me,store=NS(db=self.conn),get_guild=lambda gid:self.guild if gid==1 else None,fetch_user=AsyncMock(return_value=self.target))
         self.s=Moderation(self.bot);self.s.db.configure(1,roles=[50],log=20,category=30)
         self.i=NS(guild_id=1,user=self.actor,channel_id=40,channel=self.channel,guild=self.guild)
