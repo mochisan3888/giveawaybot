@@ -1,0 +1,4 @@
+*
+!requirements.txt
+!giveaway/
+!giveaway/*.py

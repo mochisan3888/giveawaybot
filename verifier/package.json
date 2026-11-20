@@ -1,0 +1,21 @@
+{
+  "name": "giveaway-java-verifier",
+  "version": "1.0.0",
+  "description": "Online-mode Java Minecraft identity verifier",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "minecraft-protocol": "1.68.0"
+  },
+  "private": true,
+  "overrides": {
+    "uuid": "11.1.1"
+  }
+}

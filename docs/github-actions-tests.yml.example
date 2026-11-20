@@ -1,0 +1,35 @@
+name: Tests
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: PYTHONPATH=. python -m unittest discover -s tests
+  java-verifier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm ci --ignore-scripts
+        working-directory: verifier
+      - run: npm test
+        working-directory: verifier
+  bedrock-verifier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: bedrock-go/go.mod
+          cache-dependency-path: bedrock-go/go.sum
+      - run: go test ./...
+        working-directory: bedrock-go

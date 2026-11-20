@@ -1,0 +1,84 @@
+services:
+  bot:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_PATH: ${DATABASE_PATH:-/app/data/giveaway.sqlite3}
+    volumes:
+      - giveaway-data:/app/data
+    mem_limit: 320m
+    cpus: 0.5
+    pids_limit: 100
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  verifier:
+    profiles: [minecraft]
+    build: ./verifier
+    restart: unless-stopped
+    environment:
+      MC_VERIFY_DOMAIN: ${MC_VERIFY_DOMAIN:-}
+      VERIFY_SHARED_SECRET: ${VERIFY_SHARED_SECRET:-}
+      VERIFY_CALLBACK: http://bot:8080/verify
+      PORT: '25565'
+    ports:
+      - '${MC_VERIFY_PORT:-25565}:25565/tcp'
+    mem_limit: 256m
+    cpus: 0.5
+    pids_limit: 100
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    depends_on: [bot]
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  bedrock:
+    profiles: [minecraft]
+    build: ./bedrock-go
+    restart: unless-stopped
+    environment:
+      VERIFY_SHARED_SECRET: ${VERIFY_SHARED_SECRET:-}
+      BEDROCK_CALLBACK: http://bot:8080/bedrock/issue
+      ENABLE_NETHERNET: 'true'
+      PUBLIC_IP: ${BEDROCK_PUBLIC_IP:-}
+      NETHERNET_UDP_PORT: '19133'
+      PORT: '19132'
+    ports:
+      - '${BEDROCK_VERIFY_PORT:-19132}:19132/udp'
+      - '${BEDROCK_VERIFY_PORT:-19132}:19132/tcp'
+      - '19133:19133/udp'
+    mem_limit: 384m
+    cpus: 0.5
+    pids_limit: 100
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    depends_on: [bot]
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+volumes:
+  giveaway-data:
+networks:
+  default:
+    driver_opts:
+      com.docker.network.driver.mtu: '1400'
