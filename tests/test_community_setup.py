@@ -46,3 +46,15 @@ class Resources(unittest.IsolatedAsyncioTestCase):
   self.assertIsNotNone(self.s.get(1)['pending'])
   with self.assertRaises(ValueError):await self.s.resource(1,self.data,'old','roles',call)
   self.assertEqual(call.await_count,1)
+
+class RoleOrdering(unittest.TestCase):
+ def test_same_position_tie_break_and_reverse_creation(self):
+  from giveaway.community_setup import role_order_matches
+  source=[dict(id='1',position=3),dict(id='2',position=10)]
+  # Discord inserts roles at position 1; older IDs rank higher on a tie.
+  current=[dict(id='101',position=1),dict(id='102',position=1)]
+  self.assertFalse(role_order_matches(source,{'1':'101','2':'102'},current))
+  self.assertTrue(role_order_matches(source,{'1':'102','2':'101'},current))
+ def test_missing_role_is_not_success(self):
+  from giveaway.community_setup import role_order_matches
+  self.assertFalse(role_order_matches([dict(id='1',position=1)],{'1':'101'},[]))

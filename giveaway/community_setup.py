@@ -37,6 +37,12 @@ def blueprint(source):
     return roles,sorted(channels,key=lambda c:(c['type']!=4,c['type']==15,c.get('position',0)))
 
 
+def role_order_matches(roles, mapping, current):
+    expected=[mapping[r['id']] for r in sorted(roles,key=lambda r:(r.get('position',0),-int(r['id'])))]
+    actual=[r['id'] for r in sorted(current,key=lambda r:(r['position'],-int(r['id']))) if r['id'] in set(expected)]
+    return actual==expected
+
+
 def channel_payload(c,role_map,channel_map,bot_id):
     body={k:c[k] for k in ('name','type','position','nsfw','rate_limit_per_user') if k in c}
     if c['type'] in (0,5,15):body['topic']='' if c['id']==RULES else c.get('topic')
@@ -159,13 +165,21 @@ class CommunitySetup:
                 if r.get('managed') and peer in managed:data['roles'][r['id']]=managed[peer]
             data['managed_mapped']=True
             self.save(gid,data)
-        for r in sorted(roles,key=lambda r:r.get('position',0)):
+        for r in sorted(roles,key=lambda r:(r.get('position',0),-int(r['id'])),reverse=True):
             if r['id'] in data['roles']:continue
             payload={k:r[k] for k in ('name','permissions','color','hoist','mentionable') if k in r}
             await self.resource(gid,data,r['id'],'roles',lambda payload=payload:self.bot.http.request(Route('POST','/guilds/{guild_id}/roles',guild_id=gid),json=payload,reason='Communityテンプレート設置'))
         if not data.get('role_order'):
-            positions=[{'id':data['roles'][r['id']],'position':index+1} for index,r in enumerate(sorted(roles,key=lambda r:r.get('position',0)))]
-            await self.bot.http.request(Route('PATCH','/guilds/{guild_id}/roles',guild_id=gid),json=positions,reason='Communityロール順序')
+            current=await self.bot.http.get_roles(gid)
+            if not role_order_matches(roles,data['roles'],current):
+                positions=[{'id':data['roles'][r['id']],'position':index+1} for index,r in enumerate(sorted(roles,key=lambda r:(r.get('position',0),-int(r['id']))))]
+                try:
+                    await self.bot.http.request(Route('PATCH','/guilds/{guild_id}/roles',guild_id=gid),json=positions,reason='Communityロール順序')
+                except discord.HTTPException as error:
+                    if error.code==50013:raise ReceiptError('GiveAwayBotロールを一度下へ動かして最上位へ戻し保存した後、/community resume を実行してください。') from None
+                    raise
+                current=await self.bot.http.get_roles(gid)
+                if not role_order_matches(roles,data['roles'],current):raise ReceiptError('ロール順序を確認できません。BOTロールを最上位に保存してから再開してください。')
             data['role_order']=True;self.save(gid,data)
         for c in channels:
             if c['id'] in data['channels']:continue
