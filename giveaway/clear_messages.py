@@ -20,7 +20,7 @@ async def delete_selected(channel, messages, reason):
                 deleted+=len(batch)
             else:old.extend(batch)
         for message in old:
-            try:await message.delete(reason=reason)
+            try:await message.delete()
             except discord.NotFound:continue
             deleted+=1
     except (discord.HTTPException,OSError,TimeoutError) as error:

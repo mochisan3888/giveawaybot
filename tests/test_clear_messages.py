@@ -43,3 +43,11 @@ class LargeClearTests(unittest.IsolatedAsyncioTestCase):
   self.assertEqual(channel.delete_messages.await_count,10)
   self.assertEqual([m for call in channel.delete_messages.call_args_list for m in call.args[0]],messages)
   self.assertTrue(all(len(call.args[0])==100 for call in channel.delete_messages.call_args_list))
+
+class DiscordSignatureTests(unittest.IsolatedAsyncioTestCase):
+ async def test_real_partial_message_delete_signature(self):
+  http=N(delete_message=AsyncMock())
+  channel=N(id=123,type=discord.ChannelType.text,_state=N(http=http))
+  message=discord.PartialMessage(channel=channel,id=100000000000000000)
+  self.assertEqual(await delete_selected(channel,[message],'audit reason'),(1,None))
+  http.delete_message.assert_awaited_once()
