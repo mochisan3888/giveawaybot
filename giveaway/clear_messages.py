@@ -30,11 +30,11 @@ async def delete_selected(channel, messages, reason):
 
 def register_clear(bot):
     active=set()
-    @bot.tree.command(name='clear',description='このチャンネルの直近メッセージを指定件数削除（1～100）')
+    @bot.tree.command(name='clear',description='このチャンネルの直近メッセージを指定件数削除（1～1000）')
     @app_commands.guild_only()
     @app_commands.default_permissions(manage_messages=True)
-    @app_commands.describe(count='削除するメッセージ数（1～100）。BOT・ピン留めも含む')
-    async def clear(i:discord.Interaction,count:app_commands.Range[int,1,100]):
+    @app_commands.describe(count='削除するメッセージ数（1～1000）。BOT・ピン留めも含む')
+    async def clear(i:discord.Interaction,count:app_commands.Range[int,1,1000]):
         await i.response.defer(ephemeral=True)
         if not i.guild_id or restricted(i.guild_id) or giveaway_runtime():raise ReceiptError('このサーバーでは利用できません。')
         if i.channel_id in active:raise ReceiptError('このチャンネルでは削除処理中です。少し待ってください。')

@@ -33,4 +33,13 @@ class ClearTests(unittest.IsolatedAsyncioTestCase):
   register_clear(N(tree=N(command=command)))
   self.assertTrue(commands[0].default_permissions.manage_messages)
   p=commands[0].parameters[0]
-  self.assertEqual((p.min_value,p.max_value),(1,100))
+  self.assertEqual((p.min_value,p.max_value),(1,1000))
+
+class LargeClearTests(unittest.IsolatedAsyncioTestCase):
+ async def test_thousand_messages_split_into_ten_batches(self):
+  channel=N(delete_messages=AsyncMock())
+  messages=[N(created_at=discord.utils.utcnow(),delete=AsyncMock()) for _ in range(1000)]
+  self.assertEqual(await delete_selected(channel,messages,'reason'),(1000,None))
+  self.assertEqual(channel.delete_messages.await_count,10)
+  self.assertEqual([m for call in channel.delete_messages.call_args_list for m in call.args[0]],messages)
+  self.assertTrue(all(len(call.args[0])==100 for call in channel.delete_messages.call_args_list))
